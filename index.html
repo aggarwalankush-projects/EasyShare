@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Facebook Login JavaScript Example</title>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="scripts/dropzone/dropzone.js"></script>
+    <link rel="stylesheet" href="scripts/dropzone/dropzone.css">
+</head>
+
+<body>
+    <script>
+        var accessToken;
+
+        // This is called with the results from from FB.getLoginStatus().
+        function statusChangeCallback(response) {
+            console.log('statusChangeCallback');
+            console.log(response);
+            // The response object is returned with a status field that lets the
+            // app know the current login status of the person.
+            // Full docs on the response object can be found in the documentation
+            // for FB.getLoginStatus().
+            if (response.status === 'connected') {
+                // Logged into your app and Facebook.
+                accessToken = response.authResponse.accessToken;
+                testAPI();
+            } else if (response.status === 'not_authorized') {
+                // The person is logged into Facebook, but not your app.
+                document.getElementById('status').innerHTML = 'Please log ' + 'into this app.';
+            } else {
+                // The person is not logged into Facebook, so we're not sure if
+                // they are logged into this app or not.
+                document.getElementById('status').innerHTML = 'Please log ' + 'into Facebook.';
+            }
+        }
+
+        // This function is called when someone finishes with the Login
+        // Button. See the onlogin handler attached to it in the sample
+        // code below.
+        function checkLoginState() {
+            FB.getLoginStatus(function (response) {
+                statusChangeCallback(response);
+            });
+        }
+        var user_id;
+        window.fbAsyncInit = function () {
+            FB.init({
+                appId: '439205816251471',
+                xfbml: true,
+                version: 'v2.3'
+            });
+
+            // Now that we've initialized the JavaScript SDK, we call
+            // FB.getLoginStatus(). This function gets the state of the
+            // person visiting this page and can return one of three states to
+            // the callback you provide. They can be:
+            //
+            // 1. Logged into your app ('connected')
+            // 2. Logged into Facebook, but not your app ('not_authorized')
+            // 3. Not logged into Facebook and can't tell if they are logged into
+            // your app or not.
+            //
+            // These three cases are handled in the callback function.
+
+            FB.getLoginStatus(function (response) {
+                statusChangeCallback(response);
+            });
+
+        };
+
+        // Load the SDK asynchronously
+        (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) {
+                return;
+            }
+            js = d.createElement(s);
+            js.id = id;
+            js.src = "//connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+        // Here we run a very simple test of the Graph API after login is
+        // successful. See statusChangeCallback() for when this call is made.
+        function testAPI() {
+            console.log('Welcome! Fetching your information.... ');
+            FB
+                .api(
+                    '/me',
+                    function (response) {
+                        console.log('Successful login for: ' + response.name + response.id);
+                        console.log(JSON.stringify(response));
+                        user_id = response.id;
+                        document.getElementById('status').innerHTML = 'Thanks for logging in, ' + response.name + '!';
+                    });
+        }
+
+        function logout() {
+            FB.logout(function (response) {
+                // Person is now logged out
+                console.log("You are logged out");
+            });
+        }
+
+        var event_id;
+
+        function getEvents() {
+            console.log('get event called' + user_id);
+
+            FB.api('/' + user_id + '/events', function (response) {
+                console.log(JSON.stringify(response));
+
+                for (var i = 0; i < response.data.length; i++) {
+                    console.log("Name : " + response.data[i].name + ", ID : " + response.data[i].id);
+                    event_id = response.data[i].id;
+                }
+                //                event_id = response.data[0].id;
+            });
+
+        }
+        var group_id;
+
+        function getGroups() {
+            console.log('get group called' + user_id);
+
+            FB.api('/' + user_id + '/groups', function (response) {
+
+                console.log(JSON.stringify(response));
+                console.log(response.data[0].id);
+                group_id = response.data[0].id;
+
+            });
+
+        }
+
+        function getGroupPhotos() {
+            console.log('get group Photos called' + group_id);
+
+            FB.api('/' + group_id + '?fields=cover', function (response) {
+
+                console.log(JSON.stringify(response));
+                console.log(response.data[0].id);
+                group_id = response.data[0].id;
+
+            });
+
+        }
+
+        function getEventDetail() {
+            console.log(user_id);
+            FB.api('/' + event_id + '/photos', function (response) {
+
+                console.log(JSON.stringify(response));
+                console.log(response.id);
+
+            });
+        }
+
+        function fileUpload() {
+
+            var action_url = 'https://graph.facebook.com/' + event_id + '/photos?access_token=' + accessToken;
+            var form = document.getElementById('upload-photo-form');
+            form.setAttribute('action', action_url);
+            var input = document.getElementById('upload-photo-form-file');
+            console.log(input.files.length);
+            var formData;
+            $("#upload-photo-form").submit(function (e) {
+                formData = new FormData();
+                for(var i=0;i<$('input[type=file]')[0].files.length;i++){
+                formData.append('image', $('input[type=file]')[0].files[i]); 
+                console.log(formData);
+                $.ajax({
+                    url: action_url,
+                    type: 'POST',
+                    data: formData,
+                    mimeType: "multipart/form-data",
+                    contentType: false,
+                    cache: false,
+                    processData: false,
+                    success: function (data) {
+                        console.log("hello success" + data);
+                    },
+                    error: function (data) {
+                        console.log("hello failure" + data);
+                    }
+                });
+
+
+                }
+                e.preventDefault(); //Prevent Default action. 
+            });
+            $("#upload-photo-form").submit();
+
+
+
+
+        }
+
+
+
+        function fileURLUpload() {
+            var image_url = document.getElementById("urlFileID").value;
+            FB.api(
+                "/" + event_id + "/photos",
+                "POST", {
+                    "url": image_url
+                },
+                function (response) {
+                    if (response && !response.error) {
+                        console.log(JSON.stringify(response));
+                    }
+                }
+            );
+        }
+
+        var event_photos_data;
+
+        function getEventPhotos() {
+
+            FB.api(
+                "/" + event_id + "/photos",
+                function (response) {
+                    if (response && !response.error) {
+                        console.log(JSON.stringify(response));
+                        event_photos_data = response.data;
+
+
+                    }
+                }
+            );
+        }
+
+        function showEventPhotos() {
+            for (var i = 0; i < event_photos_data.length; i++) {
+                console.log(event_photos_data[i].link);
+                document.getElementById('images').innerHTML += '<img src="' + event_photos_data[i].images[0].source + '"alt="event_photos" style="width:300px;height:300px;">';
+                console.log(event_photos_data[i].id);
+                FB.api(
+                    "/" + event_photos_data[i].id + "/likes",
+                    function (response) {
+                        if (response && !response.error) {
+                            console.log(JSON.stringify(response));
+                            document.getElementById('images').innerHTML += '<p>' + response.data.length + '</p>';
+                        }
+                    }
+                );
+            }
+        }
+
+        function deleteEventPhotos() {
+            for (var i = 0; i < event_photos_data.length - 2; i++) {
+                var photo_id = event_photos_data[i].id;
+                FB.api(
+                    "/" + photo_id,
+                    "DELETE",
+                    function (response) {
+                        if (response && !response.error) {
+                            console.log(JSON.stringify(response));
+
+                        }
+                    }
+                );
+            }
+
+        }
+
+
+
+
+        function searchEvents() {
+
+            FB.api(
+                'search?q=food&type=event',
+                function (response) {
+                    if (response && !response.error) {
+                        console.log(JSON.stringify(response));
+                        for (var i = 0; i < response.data.length; i++)
+                            console.log(response.data[i].name);
+                    } else {
+                        console.log(JSON.stringify(response));
+                    }
+                }
+            );
+        }
+
+        function changeEventStatus() {
+
+            FB.api(
+                "/" + event_id + "/declined",
+                "POST",
+                function (response) {
+                    if (response && !response.error) {
+                        console.log(response);
+                    } else
+                        console.log(response);
+                }
+            );
+        }
+    </script>
+
+    <fb:login-button scope="public_profile,email,user_events,user_photos,user_groups,publish_actions, rsvp_event" onlogin="checkLoginState();">
+    </fb:login-button>
+
+    <div id="status"></div>
+    <button onclick="logout();">log me out</button>
+    <button onclick="getEvents();">show events</button>
+    <button onclick="getEventDetail();">show events details</button>
+    <button onclick="getGroups();">show groups</button>
+    <button onclick="getGroupPhotos();">show group photos</button>
+
+
+
+    <form id="upload-photo-form" method="post" enctype="multipart/form-data">
+        <input id="upload-photo-form-file" name="file" size="27" type="file" multiple />
+        <button type="button" onclick="fileUpload();">Submit</button>
+    </form>
+
+
+
+
+
+
+    <form id="urlForm" method="post" enctype="multipart/form-data">
+        <input id="urlFileID" name="source" size="27" type="text" placeholder="Enter URL" />
+        <button type="button" onclick="fileURLUpload();">Submit</button>
+    </form>
+
+
+
+
+
+
+
+    <button onclick="getEventPhotos();">Get event photos</button>
+    <button onclick="showEventPhotos();">show event photos</button>
+    <div id="images"></div>
+
+    <button onclick="searchEvents();">Search Events</button>
+    <button onclick="changeEventStatus();">Change Event Status</button>
+
+</body>
+
+</html>

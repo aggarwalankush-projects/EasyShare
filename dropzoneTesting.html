@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+
+<meta charset="utf-8">
+
+<title>Dropzone simple example</title>
+
+
+<!--
+  DO NOT SIMPLY COPY THOSE LINES. Download the JS and CSS files from the
+  latest release (https://github.com/enyo/dropzone/releases/latest), and
+  host them yourself!
+-->
+<script src="scripts/dropzone/dropzone.js"></script>
+<link rel="stylesheet" href="scripts/dropzone/dropzone.css">
+<!--<link rel="stylesheet" href="scripts/dropzone/styles.css">-->
+<script>
+    Dropzone.options.myDropzone = {
+
+        autoProcessQueue: false,
+        addRemoveLinks: true
+
+    }
+</script>
+
+<body>
+    <p>
+        This is the most minimal example of Dropzone. The upload in this example doesn't work, because there is no actual server to handle the file upload.
+    </p>
+
+
+
+    <h1 id="try-it-out">Try it out!</h1>
+
+    <div id="dropzone">
+        <form action="index.html" class="dropzone" id="myDropzone">
+
+            <div class="dz-message">
+                Drop files here or click to upload.
+                <br />
+                <span class="note">(This is just a demo dropzone. Selected files are <strong>not</strong> actually uploaded.)</span>
+            </div>
+
+        </form>
+    </div>
+
+
+
+</body>
